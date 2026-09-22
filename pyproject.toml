@@ -10,4 +10,8 @@ dependencies = [
     "matplotlib>=3.10.6",
     "networkx>=3.6.1",
     "numpy>=2.5.3",
+    "ruff>=0.16.8",
 ]
+
+[tool.pyrefly]
+python-interpreter-path = ".venv/bin/python"
