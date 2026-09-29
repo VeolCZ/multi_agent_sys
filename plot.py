@@ -11,7 +11,7 @@ from lib import Simulation, SweepResult
 COLORS: dict[str, str] = {
     "normal": "tab:blue",
     "stubborn": "tab:orange",
-    "malicious": "tab:red",
+    "manipulative": "tab:red",
 }
 
 
@@ -43,7 +43,7 @@ def draw(
     figure.suptitle(f"network: {sim.kind}")
     values = np.asarray(sim.history)
     agent_types = np.where(
-        sim.stubborn, "stubborn", np.where(sim.malicious, "malicious", "normal")
+        sim.stubborn, "stubborn", np.where(sim.manipulative, "manipulative", "normal")
     )
 
     for index in range(cfg.n_agents):
@@ -58,7 +58,7 @@ def draw(
 
     change_from_initial = values[:, sim.normal] - values[0, sim.normal]
     mean_change = np.mean(change_from_initial, axis=1)
-    variance_change = np.var(change_from_initial, axis=1)
+    variance_change = np.var(values[0]) - np.var(values, axis=1)
     (mean_line,) = opinion_axes.plot(
         mean_change,
         color="black",
@@ -72,7 +72,7 @@ def draw(
         color="tab:purple",
         linewidth=2.5,
         linestyle=":",
-        label="variance",
+        label="delta variance",
         zorder=4,
     )
 
@@ -132,7 +132,7 @@ def draw(
 
 
 def plot_grid_search(
-    results: list[SweepResult],
+    results: SweepResult,
     x: str,
     y: str | None = None,
 ) -> None:
@@ -144,7 +144,7 @@ def plot_grid_search(
         figure, ax = plt.subplots(figsize=(10, 6))
         figure.suptitle(title)
         groups = {}
-        for row in results:
+        for row in results.grid_results:
             value = getattr(row, x)
             groups.setdefault(value, []).append(row)
 
@@ -165,7 +165,7 @@ def plot_grid_search(
         figure, (mean_ax, var_ax) = plt.subplots(1, 2, figsize=(16, 6))
         figure.suptitle(title)
         groups = {}
-        for row in results:
+        for row in results.grid_results:
             point = (row.k_neighbors, row.p_rewire)
             groups.setdefault(point, []).append(row)
 
