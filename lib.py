@@ -54,7 +54,12 @@ def init_network(
         case "random":
             graph = erdos_renyi_graph(cfg.n_agents, p_edge, seed=cfg.seed)
         case "barbasi":
-            graph = barabasi_albert_graph(cfg.n_agents, edges, seed=cfg.seed)
+            graph = barabasi_albert_graph(
+                cfg.n_agents,
+                edges,
+                seed=cfg.seed,
+                initial_graph=nx.complete_graph(edges + 1),
+            )
         case "watts":
             graph = watts_strogatz_graph(
                 cfg.n_agents, k_neighbors, p_rewire, seed=cfg.seed
@@ -97,6 +102,7 @@ def init_sim(cfg: Config, kind: NetworkKind) -> Simulation:
 def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, float]:
     state = sim.state
     init_state = state.copy()
+    norm_init_state = init_state[: cfg.n_normal_agents]
 
     for step in range(cfg.steps + 1):
         network_copy = sim.network.copy()
@@ -107,6 +113,7 @@ def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, fl
         next_state[sim.malicious] = cfg.transform(state[sim.malicious])
         next_state[sim.stubborn] = state[sim.stubborn]
         state = next_state
+        norm_state = state[: cfg.n_normal_agents]
         sim.history.append(state.copy())
 
     sim.state = state
@@ -114,7 +121,10 @@ def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, fl
         from plot import draw as draw_figure
 
         draw_figure(cfg, sim, network_copy, step)
-    return float(np.mean(state - init_state)), float(np.var(state - init_state))
+
+    return float(np.mean(norm_state - norm_init_state)), float(
+        np.var(norm_state - norm_init_state)
+    )
 
 
 def sweep(

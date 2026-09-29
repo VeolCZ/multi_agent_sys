@@ -21,9 +21,9 @@ class Config:
     malicious_target = 1
     malicious_speed = (malicious_target - malicious_opinion) / steps
     networks: tuple[NetworkKind, ...] = ("random", "barbasi", "watts")
-    p_edge = 0.5
-    edges = 3
-    k_neighbors = 4
+    p_edge = 0.25
+    edges = n_agents // 4
+    k_neighbors = n_agents // 4
     p_rewire = 0.1
 
     def transform(self, x: np.ndarray) -> np.ndarray:

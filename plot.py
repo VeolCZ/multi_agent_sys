@@ -56,7 +56,7 @@ def draw(
             zorder=1 if kind == "normal" else 2,
         )
 
-    change_from_initial = values - values[0]
+    change_from_initial = values[:, sim.normal] - values[0, sim.normal]
     mean_change = np.mean(change_from_initial, axis=1)
     variance_change = np.var(change_from_initial, axis=1)
     (mean_line,) = opinion_axes.plot(
@@ -156,8 +156,8 @@ def plot_grid_search(
             mean_avgs.append(sum(row.mean for row in rows) / len(rows))
             var_avgs.append(sum(row.var for row in rows) / len(rows))
 
-        ax.plot(values, mean_avgs, label="mean delta")
-        ax.plot(values, var_avgs, label="variance delta")
+        ax.plot(values, mean_avgs, label="delta mean")
+        ax.plot(values, var_avgs, label="delta variance")
         ax.set_xlabel(x)
         ax.set_ylabel("seed-averaged delta")
         ax.legend()
@@ -181,12 +181,12 @@ def plot_grid_search(
 
         x_grid, y_grid = np.meshgrid(x_values, y_values)
         mean_heatmap = mean_ax.pcolormesh(x_grid, y_grid, mean_grid)
-        figure.colorbar(mean_heatmap, ax=mean_ax, label="seed-averaged mean delta")
-        mean_ax.set(title="mean delta", xlabel=x, ylabel=y)
+        figure.colorbar(mean_heatmap, ax=mean_ax, label="seed-averaged delta mean")
+        mean_ax.set(title="delta mean", xlabel=x, ylabel=y)
 
         var_heatmap = var_ax.pcolormesh(x_grid, y_grid, var_grid)
-        figure.colorbar(var_heatmap, ax=var_ax, label="seed-averaged variance delta")
-        var_ax.set(title="variance delta", xlabel=x, ylabel=y)
+        figure.colorbar(var_heatmap, ax=var_ax, label="seed-averaged delta variance")
+        var_ax.set(title="delta variance", xlabel=x, ylabel=y)
 
     figure.tight_layout()
     plt.show()
