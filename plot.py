@@ -56,11 +56,10 @@ def draw(
             zorder=1 if kind == "normal" else 2,
         )
 
-    change_from_initial = values[:, sim.normal] - values[0, sim.normal]
-    mean_change = np.mean(change_from_initial, axis=1)
-    variance_change = np.var(values[0]) - np.var(values, axis=1)
+    mean_opinion = np.mean(values[:, sim.normal], axis=1)
+    opinion_variance = np.var(values, axis=1)
     (mean_line,) = opinion_axes.plot(
-        mean_change,
+        mean_opinion,
         color="black",
         linewidth=2.5,
         linestyle="--",
@@ -68,11 +67,11 @@ def draw(
         zorder=4,
     )
     (variance_line,) = opinion_axes.plot(
-        variance_change,
+        opinion_variance,
         color="tab:purple",
         linewidth=2.5,
         linestyle=":",
-        label="delta variance",
+        label="variance",
         zorder=4,
     )
 
