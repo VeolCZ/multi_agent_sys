@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 from matplotlib.patches import Patch
 
-from config import Config
+from config import HYPERPARAMETER_NAMES, NETWORK_NAMES, Config
 from lib import Simulation, SweepResult
 
 COLORS: dict[str, str] = {
@@ -42,7 +42,7 @@ def draw(
     step: int,
 ) -> None:
     figure, (opinion_axes, network_axes) = plt.subplots(1, 2, figsize=(16, 6))
-    figure.suptitle(f"network: {sim.kind}")
+    figure.suptitle(f"Network: {NETWORK_NAMES[sim.kind]}")
     values = np.asarray(sim.history)
     agent_types = np.where(
         sim.stubborn, "stubborn", np.where(sim.manipulative, "manipulative", "normal")
@@ -65,7 +65,7 @@ def draw(
         color="black",
         linewidth=2.5,
         linestyle="--",
-        label="mean",
+        label="Mean",
         zorder=4,
     )
     (variance_line,) = opinion_axes.plot(
@@ -73,18 +73,21 @@ def draw(
         color="tab:purple",
         linewidth=2.5,
         linestyle=":",
-        label="variance",
+        label="Variance",
         zorder=4,
     )
 
     opinion_axes.set(
-        title=f"opinion at step {step}",
-        xlabel="step",
-        ylabel="opinion",
+        title=f"Opinion step {step + 1}",
+        xlabel="Step",
+        ylabel="Opinion",
     )
     opinion_axes.legend(
         handles=[
-            *[Patch(color=color, label=name) for name, color in COLORS.items()],
+            *[
+                Patch(color=color, label=name.capitalize())
+                for name, color in COLORS.items()
+            ],
             mean_line,
             variance_line,
         ]
@@ -126,10 +129,11 @@ def draw(
         font_color="white",
         font_size=6,
     )
-    network_axes.set_title("network")
+    network_axes.set_title("Network")
     network_axes.axis("off")
     figure.tight_layout(rect=(0, 0, 1, 0.94))
     res_path = Path("./figs/")
+
     if not res_path.exists():
         res_path.mkdir()
     plt.savefig(res_path / (sim.kind.name + ".png"))
@@ -141,9 +145,10 @@ def plot_grid_search(
     x: str,
     y: str | None = None,
 ) -> None:
-    title = x
+    x_label = HYPERPARAMETER_NAMES[x]
+    title = NETWORK_NAMES[results.kind]
     if y is not None:
-        title += f" vs {y}"
+        y_label = HYPERPARAMETER_NAMES[y]
 
     if y is None:
         figure, ax = plt.subplots(figsize=(10, 6))
@@ -161,10 +166,11 @@ def plot_grid_search(
             mean_avgs.append(sum(row.mean for row in rows) / len(rows))
             var_avgs.append(sum(row.var for row in rows) / len(rows))
 
-        ax.plot(values, mean_avgs, label="delta mean")
-        ax.plot(values, var_avgs, label="delta variance")
-        ax.set_xlabel(x)
-        ax.set_ylabel("seed-averaged delta")
+        ax.plot(values, mean_avgs, label="Delta mean")
+        ax.plot(values, var_avgs, label="Delta variance")
+        ax.axhline(0, color="gray", linestyle="--", linewidth=1)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel("Seed-averaged delta")
         ax.legend()
     else:
         figure, (mean_ax, var_ax) = plt.subplots(1, 2, figsize=(16, 6))
@@ -185,13 +191,19 @@ def plot_grid_search(
                 var_grid[y_index, x_index] = sum(row.var for row in rows) / len(rows)
 
         x_grid, y_grid = np.meshgrid(x_values, y_values)
-        mean_heatmap = mean_ax.pcolormesh(x_grid, y_grid, mean_grid)
-        figure.colorbar(mean_heatmap, ax=mean_ax, label="seed-averaged delta mean")
-        mean_ax.set(title="delta mean", xlabel=x, ylabel=y)
+        mean_limit = float(np.max(np.abs(mean_grid))) or 1.0
+        var_limit = float(np.max(np.abs(var_grid))) or 1.0
+        mean_heatmap = mean_ax.pcolormesh(
+            x_grid, y_grid, mean_grid, cmap="RdBu_r", vmin=-mean_limit, vmax=mean_limit
+        )
+        figure.colorbar(mean_heatmap, ax=mean_ax, label="Seed-averaged delta mean")
+        mean_ax.set(title="Delta mean", xlabel=x_label, ylabel=y_label)
 
-        var_heatmap = var_ax.pcolormesh(x_grid, y_grid, var_grid)
-        figure.colorbar(var_heatmap, ax=var_ax, label="seed-averaged delta variance")
-        var_ax.set(title="delta variance", xlabel=x, ylabel=y)
+        var_heatmap = var_ax.pcolormesh(
+            x_grid, y_grid, var_grid, vmin=-var_limit, vmax=var_limit
+        )
+        figure.colorbar(var_heatmap, ax=var_ax, label="Seed-averaged delta variance")
+        var_ax.set(title="Delta variance", xlabel=x_label, ylabel=y_label)
 
     figure.tight_layout()
     plt.show()

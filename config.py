@@ -3,11 +3,25 @@ from enum import StrEnum
 
 import numpy as np
 
+HYPERPARAMETER_NAMES = {
+    "p_edge": "Edge probability",
+    "edges": "Edges per new node",
+    "k_neighbors": "Number of neighbours",
+    "p_rewire": "Rewiring probability",
+}
+
 
 class NetworkKind(StrEnum):
     RANDOM = "random"
     BARBASI = "barbasi"
     WATTS = "watts"
+
+
+NETWORK_NAMES = {
+    NetworkKind.RANDOM: "Erdős-Rényi",
+    NetworkKind.BARBASI: "Barabási-Albert",
+    NetworkKind.WATTS: "Watts-Strogatz",
+}
 
 
 @dataclass

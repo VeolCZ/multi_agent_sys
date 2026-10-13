@@ -43,6 +43,7 @@ class SweepPoint:
 
 @dataclass
 class SweepResult:
+    kind: NetworkKind
     highest_delta_mean: float
     average_delta_mean: float
     variance_delta_mean: float
@@ -124,8 +125,6 @@ def init_sim(cfg: Config, kind: NetworkKind) -> Simulation:
 
 def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, float]:
     state = sim.state
-    init_state = state.copy()
-    norm_init_state = init_state[sim.normal]
 
     for step in range(cfg.steps):
         network_copy = sim.network.copy()
@@ -136,7 +135,6 @@ def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, fl
         next_state[sim.manipulative] = cfg.transform(state[sim.manipulative])
         next_state[sim.stubborn] = state[sim.stubborn]
         state = next_state
-        norm_state = state[sim.normal]
         sim.history.append(state.copy())
 
     sim.state = state
@@ -145,8 +143,27 @@ def run_one(cfg: Config, sim: Simulation, draw: bool = False) -> tuple[float, fl
 
         draw_figure(cfg, sim, network_copy, step)
 
-    return float(np.mean(norm_state - norm_init_state)), float(
-        np.var(init_state) - np.var(state)
+    return float(np.mean(state[sim.normal])), float(np.var(state))
+
+
+def run_pair(cfg: Config, kind: NetworkKind) -> tuple[float, float]:
+    manipulated = init_sim(cfg, kind)
+    baseline = Simulation(
+        kind=manipulated.kind,
+        state=manipulated.state.copy(),
+        normal=manipulated.normal | manipulated.manipulative,
+        stubborn=manipulated.stubborn.copy(),
+        manipulative=np.zeros_like(manipulated.manipulative),
+        network=manipulated.network.copy(),
+        history=[manipulated.state.copy()],
+    )
+
+    run_one(cfg, manipulated)
+    run_one(cfg, baseline)
+
+    normal = manipulated.normal
+    return float(np.mean(manipulated.state[normal] - baseline.state[normal])), float(
+        np.var(baseline.state) - np.var(manipulated.state)
     )
 
 
@@ -175,7 +192,7 @@ def sweep(
             if point.p_rewire is not None:
                 cfg.p_rewire = point.p_rewire
 
-            mean, var = run_one(cfg, init_sim(cfg, kind))
+            mean, var = run_pair(cfg, kind)
             means.append(mean)
             variances.append(var)
             means_by_seed[seed].append(mean)
@@ -193,6 +210,7 @@ def sweep(
 
     grid_means = [result.mean for result in grid_results]
     return SweepResult(
+        kind=kind,
         highest_delta_mean=max(grid_means),
         average_delta_mean=fmean(grid_means),
         variance_delta_mean=pvariance(grid_means),
