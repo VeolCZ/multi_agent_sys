@@ -10,6 +10,11 @@ from matplotlib.patches import Patch
 from config import HYPERPARAMETER_NAMES, NETWORK_NAMES, Config
 from lib import Simulation, SweepResult
 
+res_path = Path("./figs/")
+
+if not res_path.exists():
+    res_path.mkdir()
+
 COLORS: dict[str, str] = {
     "normal": "tab:blue",
     "stubborn": "tab:orange",
@@ -132,10 +137,6 @@ def draw(
     network_axes.set_title("Network")
     network_axes.axis("off")
     figure.tight_layout(rect=(0, 0, 1, 0.94))
-    res_path = Path("./figs/")
-
-    if not res_path.exists():
-        res_path.mkdir()
     plt.savefig(res_path / (sim.kind.name + ".png"))
     plt.show()
 
@@ -206,4 +207,6 @@ def plot_grid_search(
         var_ax.set(title="Delta variance", xlabel=x_label, ylabel=y_label)
 
     figure.tight_layout()
+    plt.savefig(res_path / (title + ".png"))
+    plt.show()
     plt.show()
