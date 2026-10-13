@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 
 # pyrefly: ignore [untyped-import]
@@ -128,6 +130,10 @@ def draw(
     network_axes.axis("off")
     figure.tight_layout(rect=(0, 0, 1, 0.94))
     plt.show()
+    res_path = Path("./figs/")
+    if not res_path.exists():
+        res_path.mkdir()
+    plt.savefig(res_path / sim.kind.name)
 
 
 def plot_grid_search(
