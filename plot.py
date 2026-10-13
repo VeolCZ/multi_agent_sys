@@ -129,11 +129,11 @@ def draw(
     network_axes.set_title("network")
     network_axes.axis("off")
     figure.tight_layout(rect=(0, 0, 1, 0.94))
-    plt.show()
     res_path = Path("./figs/")
     if not res_path.exists():
         res_path.mkdir()
-    plt.savefig(res_path / sim.kind.name)
+    plt.savefig(res_path / (sim.kind.name + ".png"))
+    plt.show()
 
 
 def plot_grid_search(
